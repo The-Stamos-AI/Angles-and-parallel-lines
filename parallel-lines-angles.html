@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Angles and Parallel Lines</title>
+<style>
+:root{color-scheme:light;--bg:#f6f6f2;--card:#fff;--ink:#1d2327;--mute:#5d6770;--grid:#b9c0c7;--bd:#d9dde1;--c1:#d6336c;--c2:#1c7ed6;--c3:#2f9e44;--c4:#e67700;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#14181c;--card:#1d2328;--ink:#eceff1;--mute:#9aa6b0;--grid:#56626d;--bd:#33404a;--c1:#ff6b9d;--c2:#5aa9ff;--c3:#51cf66;--c4:#ffa94d}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#14181c;--card:#1d2328;--ink:#eceff1;--mute:#9aa6b0;--grid:#56626d;--bd:#33404a;--c1:#ff6b9d;--c2:#5aa9ff;--c3:#51cf66;--c4:#ffa94d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 14px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tabs button{font:inherit;padding:8px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--ink);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+svg{width:100%;height:auto;display:block}
+.ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.ctl input[type=range]{flex:1;min-width:160px}
+.big{font-weight:700;font-variant-numeric:tabular-nums}
+.ctl button{font:inherit;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--ink);cursor:pointer}
+.chips{display:inline-flex;border:1px solid var(--ink);border-radius:4px;overflow:hidden}.chips i{width:16px;height:16px;display:block}
+h2{font-size:1.1rem;margin:0 0 6px}
+ul{list-style:none;margin:8px 0 0;padding:0}
+li{padding:6px 0;border-top:1px solid var(--bd);display:flex;gap:8px;align-items:center}
+.sw{width:20px;height:20px;border-radius:6px;flex:none}
+.note{color:var(--mute);font-size:.9rem;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin-top:10px}
+td,th{border:1px solid var(--bd);padding:4px 6px;text-align:center}
+.wrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+<h1>Angles and parallel lines</h1>
+<p class="sub">A transversal crosses two parallel lines and makes eight angles. Choose a relationship, then drag the slider to see which angles stay equal and which add to 180°.</p>
+<div class="tabs" id="tabs"></div>
+<div class="grid">
+  <div class="card">
+    <svg id="svg" viewBox="0 0 600 460" role="img" aria-label="Transversal crossing two parallel lines with eight labelled angles"></svg>
+    <div class="ctl">
+      <label for="ang">Transversal angle (angle b):</label>
+      <span class="big" id="angv"></span>
+      <input type="range" id="ang" min="30" max="150" step="1" value="65">
+    </div>
+    <div class="ctl"><label><input type="checkbox" id="showv" checked> Show angle sizes on the diagram</label></div>
+    <div class="ctl"><button id="gbtn" aria-pressed="false"><span class="chips"><i style="background:#000"></i><i style="background:#555"></i><i style="background:#aaa"></i><i style="background:#fff"></i></span><span id="gtxt">Switch to 4 greys (black to white)</span></button></div>
+  </div>
+  <div class="card">
+    <h2 id="rname"></h2>
+    <div id="rrule"></div>
+    <ul id="pairs"></ul>
+    <div class="note" id="rwhy"></div>
+    <div class="wrap"><table id="tbl"></table></div>
+  </div>
+</div>
+</main>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const Y1=160,Y2=320;
+const REL={
+ all:{n:'All eight angles',r:'Pick a relationship above to highlight matching pairs. Here only angles b, c, f and g are equal to the slider angle; the other four are its supplement.',p:[],k:'',w:'Every angle is either the slider angle or 180° minus it, because the transversal is a straight line and the two lines are parallel.'},
+ corr:{n:'Corresponding angles',r:'Same position at each intersection (look for an F shape). They are equal.',p:[['a','e'],['b','f'],['c','g'],['d','h']],k:'eq',w:'Slide the top intersection down along the transversal to the bottom line without turning it. Parallel lines point the same way, so the angle is unchanged.'},
+ alti:{n:'Alternate interior angles',r:'Between the parallel lines, on opposite sides of the transversal (look for a Z shape). They are equal.',p:[['c','f'],['d','e']],k:'eq',w:'Each is vertically opposite to a corresponding angle, so each is equal to it, and therefore to each other.'},
+ alte:{n:'Alternate exterior angles',r:'Outside the parallel lines, on opposite sides of the transversal. They are equal.',p:[['a','h'],['b','g']],k:'eq',w:'Each is vertically opposite to an alternate interior angle, so the equality carries across.'},
+ coin:{n:'Co-interior (allied) angles',r:'Between the parallel lines, on the same side of the transversal (look for a C or U shape). They add to 180°.',p:[['c','e'],['d','f']],k:'sum',w:'One is equal to the alternate interior angle of the other, and that angle sits on a straight line beside it, so the pair adds to 180°.'},
+ vert:{n:'Vertically opposite angles',r:'Opposite each other where two lines cross (an X shape). They are equal. This works at either intersection and does not need parallel lines.',p:[['a','d'],['b','c'],['e','h'],['f','g']],k:'eq',w:'Each angle and its neighbour make 180° on a straight line, so the two opposite angles must both equal 180° minus the same neighbour.'},
+ str:{n:'Angles on a straight line',r:'Neighbouring angles along a line add to 180°. This is also true on each parallel line and along the transversal.',p:[['a','b'],['c','d'],['e','f'],['g','h']],k:'sum',w:'A straight angle is 180°, and the transversal splits it into two parts.'}
+};
+const ORDER=['all','corr','alti','alte','coin','vert','str'];
+const COL=['var(--c1)','var(--c2)','var(--c3)','var(--c4)'];
+const GREY=['#000000','#555555','#aaaaaa','#ffffff'];
+let cur='all',t=65,grey=false;
+const val=(l,t)=>({a:180-t,b:t,c:t,d:180-t,e:180-t,f:t,g:t,h:180-t})[l];
+// math angle range [from,to] for each letter, and which intersection (0 top, 1 bottom)
+const reg=(l,t)=>{const q={a:[t,180],b:[0,t],c:[180,180+t],d:[180+t,360]}['abcdefgh'.indexOf(l)%4===0?'a':'abcdefgh'.indexOf(l)%4===1?'b':'abcdefgh'.indexOf(l)%4===2?'c':'d'];return q};
+const pt=(cx,cy,r,deg)=>[cx+r*Math.cos(deg*Math.PI/180),cy-r*Math.sin(deg*Math.PI/180)];
+function wedge(cx,cy,r,a1,a2,fill,op){
+ const s=pt(cx,cy,r,a1),e=pt(cx,cy,r,a2);
+ return `<path d="M${cx},${cy} L${s[0].toFixed(1)},${s[1].toFixed(1)} A${r},${r} 0 0 0 ${e[0].toFixed(1)},${e[1].toFixed(1)} Z" fill="${fill}" fill-opacity="${op}" stroke="${grey&&op>.5?'var(--ink)':fill}" stroke-width="${op>.5?3:1}"/>`;
+}
+function draw(){
+ const th=t*Math.PI/180,cot=Math.cos(th)/Math.sin(th);
+ const P=[[300+80*cot,Y1],[300-80*cot,Y2]];
+ const xAt=y=>P[0][0]+(Y1-y)*cot;
+ const R=REL[cur];
+ const color={};R.p.forEach((pr,i)=>pr.forEach(l=>color[l]=(grey?GREY:COL)[i]));
+ const show=document.getElementById('showv').checked;
+ let s='';
+ // wedges
+ 'abcdefgh'.split('').forEach(l=>{
+  const i=l<'e'?0:1,[c0,c1]=reg(l,t),[cx,cy]=P[i];
+  const hl=color[l];
+  s+=wedge(cx,cy,hl?52:34,c0,c1,hl||'var(--grid)',hl?.9:.15);
+ });
+ // lines
+ s+=`<line x1="20" y1="${Y1}" x2="580" y2="${Y1}" stroke="var(--ink)" stroke-width="2.5"/>`;
+ s+=`<line x1="20" y1="${Y2}" x2="580" y2="${Y2}" stroke="var(--ink)" stroke-width="2.5"/>`;
+ [Y1,Y2].forEach(y=>{s+=`<polyline points="44,${y-7} 54,${y} 44,${y+7}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;});
+ s+=`<line x1="${xAt(70).toFixed(1)}" y1="70" x2="${xAt(410).toFixed(1)}" y2="410" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="10 5"/>`;
+ P.forEach(p=>s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1]}" r="4" fill="var(--ink)"/>`);
+ // labels
+ 'abcdefgh'.split('').forEach(l=>{
+  const i=l<'e'?0:1,[c0,c1]=reg(l,t),[cx,cy]=P[i],m=(c0+c1)/2;
+  const [x,y]=pt(cx,cy,color[l]?76:58,m);
+  const v=val(l,t),txt=l+(show?' '+v+'°':'');
+  if(color[l]){const w=txt.length*9+16;s+=`<rect x="${(x-w/2).toFixed(1)}" y="${(y-12).toFixed(1)}" width="${w}" height="24" rx="12" fill="${color[l]}" stroke="${grey?'var(--ink)':'none'}" stroke-width="2"/>`;}
+  s+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="700" fill="${color[l]?(grey?(['#000000','#555555'].includes(color[l])?'#fff':'#000'):'var(--bg)'):(cur==='all'?'var(--ink)':'var(--mute)')}">${txt}</text>`;
+ });
+ s+=`<text x="570" y="${Y1-10}" text-anchor="end" font-size="12" fill="var(--mute)">parallel</text><text x="570" y="${Y2-10}" text-anchor="end" font-size="12" fill="var(--mute)">parallel</text>`;
+ document.getElementById('svg').innerHTML=s;
+ document.getElementById('angv').textContent=t+'°';
+ // panel
+ document.getElementById('rname').textContent=R.n;
+ document.getElementById('rrule').textContent=R.r;
+ document.getElementById('rwhy').textContent='Why: '+R.w;
+ let h='';
+ R.p.forEach((pr,i)=>{
+  const [x,y]=pr,vx=val(x,t),vy=val(y,t);
+  const txt=R.k==='eq'?`<b>${x}</b> = ${vx}° and <b>${y}</b> = ${vy}° (equal)`:`<b>${x}</b> + <b>${y}</b> = ${vx}° + ${vy}° = ${vx+vy}°`;
+  h+=`<li><span class="sw" style="background:${(grey?GREY:COL)[i]};border:2px solid ${grey?'var(--ink)':'transparent'}"></span><span>${txt}</span></li>`;
+ });
+ document.getElementById('pairs').innerHTML=h;
+ // value table
+ let T='<tr><th></th>'+'abcd'.split('').map(l=>`<th>${l}</th>`).join('')+'</tr>';
+ T+='<tr><th>Top line</th>'+'abcd'.split('').map(l=>`<td>${val(l,t)}°</td>`).join('')+'</tr>';
+ T+='<tr><th></th>'+'efgh'.split('').map(l=>`<th>${l}</th>`).join('')+'</tr>';
+ T+='<tr><th>Bottom line</th>'+'efgh'.split('').map(l=>`<td>${val(l,t)}°</td>`).join('')+'</tr>';
+ document.getElementById('tbl').innerHTML=T;
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===cur));
+}
+const tabs=document.getElementById('tabs');
+ORDER.forEach(k=>{const b=document.createElement('button');b.textContent=REL[k].n;b.dataset.k=k;b.onclick=()=>{cur=k;draw()};tabs.appendChild(b)});
+document.getElementById('ang').oninput=e=>{t=+e.target.value;draw()};
+document.getElementById('showv').onchange=draw;
+document.getElementById('gbtn').onclick=e=>{grey=!grey;e.currentTarget.setAttribute('aria-pressed',grey);document.getElementById('gtxt').textContent=grey?'Back to colour':'Switch to 4 greys (black to white)';draw()};
+draw();
+</script>
+</body>
+</html>
